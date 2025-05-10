@@ -1,4 +1,4 @@
-from pygame import *
+ehfufrom pygame import *
 from random import randint
 import time as time1
 
