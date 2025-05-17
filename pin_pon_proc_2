@@ -1,0 +1,85 @@
+from random import randint, choice
+import time as time1
+
+av_time = time.Clock()
+FPS = 60
+
+backgroun = transform.scale(image.load("background.jpg"), (700, 500))
+
+class GameSprite(sprite.Sprite):
+    def __init__(self, speed_y, speed_x, pl_image, x, y, s1, s2):
+        super().__init__()
+        self.speed_y = speed_y
+        self.speed_x = speed_x
+        self.pl_image = transform.scale(image.load(pl_image), (s1, s2))
+        self.rect = self.pl_image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+    def reset(self):
+        window.blit(self.pl_image, (self.rect.x, self.rect.y))
+
+class Player(GameSprite):
+    def update_R(self):
+        keys = key.get_pressed()
+        if keys[K_UP] and self.rect.y > 5:
+            self.rect.y -= self.speed_y
+        if keys[K_DOWN] and self.rect.y < 420:
+            self.rect.y += self.speed_y
+        self.reset()
+
+    def update_L(self):
+        keys = key.get_pressed()
+        if keys[K_w] and self.rect.y > 5:
+            self.rect.y -= self.speed
+        if keys[K_s] and self.rect.y < 420:
+            self.rect.y += self.speed
+        self.reset()
+    
+class Ball(GameSprite):
+    def bump_l_r(self, rocket_speed):
+        self.speed_x = self.speed_x*(-1)
+        self.speed_y = self.speed_y+(rocket_speed/2)
+    def bump_u_d(self):
+        self.speed_y = self.speed_y*(-1)
+    def update(self):
+        self.rect.y += self.speed_y
+        self.rect.x += self.speed_x 
+        self.reset()
+    
+rocket_l = Player(6, 0, "rocket.png", 5, 240, 20, 50)
+rocket_r = Player(6, 0, "rocket.png", 480, 240, 25, 50)
+b_start_speed = (4, -4)
+ball = Ball(3, choice(b_start_speed), 'tennis.png',337, 237 26, 26)
+
+count_r = 0
+count_l
+rel_time = False
+game = True
+finish = False
+while game:
+    skipped_l = m_font.render('Очки:'+str(count_l), True, (252, 3, 3))
+    skipped_r = m_font.render('Очки:'+str(count_r), True, (140, 0, 255))
+    keys = key.get_pressed()
+
+    for i in event.get():
+        if i.type == QUIT:
+            game = False
+    if finish != True:
+        if ball.rect.x > 750:
+            count_l += 1
+            finish = True
+        elif ball.rect.x < 0:
+            count_r += 1
+            finish = True
+        else:
+            if sprite.collide_rect(ball, rocket_l) and keys[K_w]:
+                ball.bump_l_r(-rocket_l.speed_y)
+            elif sprite.collide_rect(ball, rocket_l) and keys[K_s]:
+                ball.bump_l_r(rocket_l.speed_y)
+            elif sprite.collide_rect(ball, rocket_r) and keys[K_UP]:
+                ball.bump_l_r(-rocket_r.speed_y)
+            elif sprite.collide_rect(ball, rocket_l) and keys[K_DOWN]:
+                ball.bump_l_r(rocket_r.speed_y)
+            elif sprite.collide_rect(ball, rocket_r) and not(keys[K_DOWN] or keys[K_UP]:
+                ball.bump_l_r(0)
