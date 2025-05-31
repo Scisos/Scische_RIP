@@ -1,0 +1,167 @@
+from random import randint, choice
+import time as time1
+import pygame
+
+mixer.init()
+mixer.music.load('Death by Glamour.mp3')
+mixer.music.play()
+hit_m = mixer.Sound('hit.ogg')
+
+window = pygame.display.set_mode((700, 500))
+pygame.display.set_caption("pinpon")
+av_time = pygame.time.Clock()
+FPS = 60
+pygame.font.init()
+v_font = pygame.font.SysFont("Arial", 70)
+m_font = pygame.font.SysFont("Arial", 20)
+backgroun = pygame.transform.scale(pygame.image.load("background.jpg"), (700, 500))
+win_r = v_font.render('RED WON!', True, (252, 3, 3))
+win_l = v_font.render('PURPLE WON!', True, (140, 0, 255))
+g_p_r = v_font.render('POINT TO RED!', True, (252, 3, 3))
+g_p_l = v_font.render('POINT TO PURPLE!', True, (140, 0, 255))
+class GameSprite(pygame.sprite.Sprite):
+    def __init__(self, speed_y, speed_x, pl_image, x, y, s1, s2):
+        super().__init__()
+        self.speed_y = speed_y
+        self.speed_x = speed_x
+        self.pl_image = pygame.transform.scale(pygame.image.load(pl_image), (s1, s2))
+        self.rect = self.pl_image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+    def reset(self):
+        window.blit(self.pl_image, (self.rect.x, self.rect.y))
+
+class Player(GameSprite):
+    def update_R(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_UP] and self.rect.y > 5:
+            self.rect.y -= self.speed_y
+        if keys[pygame.K_DOWN] and self.rect.y < 420:
+            self.rect.y += self.speed_y
+        self.reset()
+
+    def update_L(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_w] and self.rect.y > 5:
+            self.rect.y -= self.speed_y
+        if keys[pygame.K_s] and self.rect.y < 420:
+            self.rect.y += self.speed_y
+        self.reset()
+    
+class Ball(GameSprite):
+    def bump_l_r(self, rocket_speed):
+        self.speed_x = self.speed_x*(-1)
+        self.speed_y = self.speed_y+(rocket_speed/2)
+        hit_m.play()
+    def bump_u_d(self):
+        self.speed_y = self.speed_y*(-1)
+    def update(self):
+        self.rect.y += self.speed_y
+        self.rect.x += self.speed_x 
+        self.reset()
+    
+rocket_l = Player(6, 0, "purple_rocket.png", 5, 240, 50, 150)
+rocket_r = Player(6, 0, "red_rocket.png", 650, 240, 50, 150)
+b_start_speed = (4, -4)
+ball = Ball(3, choice(b_start_speed), 'tennis.png',337, 237, 35, 35)
+
+
+
+
+count_r = 0
+count_l = 0
+rel_time = False
+game = True
+finish = False
+while game:
+    skipped_l = m_font.render('Очки:'+str(count_l), True, (140, 0, 255))
+    skipped_r = m_font.render('Очки:'+str(count_r), True, (252, 3, 3))
+    window.blit(backgroun, (0,0))
+    keys = pygame.key.get_pressed()
+
+    for i in pygame.event.get():
+        if i.type == pygame.QUIT:
+            game = False
+    if finish != True:
+        if ball.rect.x > 665:
+            count_l += 1
+            count_r += 1
+            ball.rect.x = 337
+            ball.rect.y = 237
+            rocket_l.rect.x = 5
+            rocket_l.rect.y = 240
+            rocket_r.rect.x = 650
+            rocket_l.rect.y = 240
+            window.blit(g_p_l, (40, 200))
+  
+            pygame.display.update()
+            time1.sleep(1)
+        elif ball.rect.x < 0:
+            count_r += 1
+            ball.rect.x = 337
+            ball.rect.y = 237
+            rocket_l.rect.x = 5
+            rocket_l.rect.y = 240
+            rocket_r.rect.x = 650
+            rocket_l.rect.y = 240
+            window.blit(g_p_r, (100, 200))
+            pygame.display.update()
+            time1.sleep(1)
+            
+        else:
+            if pygame.sprite.collide_rect(ball, rocket_l) and keys[pygame.K_w]:
+                ball.bump_l_r(-rocket_l.speed_y)
+            elif pygame.sprite.collide_rect(ball, rocket_l) and keys[pygame.K_s]:
+                ball.bump_l_r(rocket_l.speed_y)
+            elif pygame.sprite.collide_rect(ball, rocket_r) and keys[pygame.K_UP]:
+                ball.bump_l_r(-rocket_r.speed_y)
+            elif pygame.sprite.collide_rect(ball, rocket_l) and keys[pygame.K_DOWN]:
+                ball.bump_l_r(rocket_r.speed_y)
+            elif pygame.sprite.collide_rect(ball, rocket_r) and not(keys[pygame.K_DOWN] or keys[pygame.K_UP]):
+                ball.bump_l_r(0)
+            elif pygame.sprite.collide_rect(ball, rocket_l) and not(keys[pygame.K_w] or keys[pygame.K_s]):
+                ball.bump_l_r(0)
+            elif ball.rect.y >= 465 or ball.rect.y <= 0:
+                ball.bump_u_d()
+
+        
+            
+            
+                
+            
+        if count_l >= 3 or count_r >= 3:
+            pygame.display.update()
+            finish = True
+            
+        ball.update()
+        rocket_l.update_L()
+        rocket_r.update_R()
+        window.blit(skipped_l, (10,10))
+        window.blit(skipped_r, (630,10))
+        pygame.display.update()
+        av_time.tick(FPS)    
+
+    else:
+
+            if count_l >= 3:
+                window.blit(win_l,(110, 200))
+                pygame.display.update()
+            else:
+                window.blit(win_r, (150, 200))
+                pygame.display.update()
+            if keys[pygame.K_SPACE]:
+                finish = False
+                count_r = 0
+                count_l = 0
+
+                rocket_l.rect.x = 5
+                rocket_l.rect.y = 240
+                rocket_r.rect.x = 650
+                rocket_r.rect.y = 240
+                rocket_l.update()
+                rocket_r.update()
+                ball.rect.x = 337
+                ball.rect.y = 237
+                ball.update()
+                pygame.display.update()
